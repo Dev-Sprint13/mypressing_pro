@@ -28,8 +28,8 @@ export const seoConfig: Record<string, SEOConfig> = {
 // Helper function to get SEO config for a route
 export function getSEOConfig(pathname: string): SEOConfig {
   return seoConfig[pathname] || seoConfig['/'] || {
-    title: 'Web App',
-    description: 'Built with AppGen',
+    title: 'PressingPro',
+    description: 'PressingPro is a platform for managing your pressing business.',
     keywords: '',
   };
 }
