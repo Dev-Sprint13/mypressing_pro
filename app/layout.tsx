@@ -11,8 +11,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <title>Pressly</title>
-        <meta name="description" content="Built with AppGen" />
+        <title>PressingPro</title>
+        <meta name="description" content="PressingPro is a platform for managing your pressing business." />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" />
