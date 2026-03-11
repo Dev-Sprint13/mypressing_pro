@@ -516,10 +516,10 @@ export default function AgentNewOrderPage() {
 
                 {/* Navigation Buttons */}
                 <div className="flex gap-3 mt-8">
-                    <button onClick="previousStep()" className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-all text-sm">
+                    <button onClick={() => previousStep()} className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-all text-sm">
                         ← Précédent
                     </button>
-                    <button onClick="nextStep()" className="flex-1 py-2.5 px-4 rounded-xl bg-brand text-white font-semibold hover:bg-brand-dark transition-all text-sm">
+                    <button onClick={() => nextStep()} className="flex-1 py-2.5 px-4 rounded-xl bg-brand text-white font-semibold hover:bg-brand-dark transition-all text-sm">
                         Procéder au paiement →
                     </button>
                 </div>
@@ -565,10 +565,10 @@ export default function AgentNewOrderPage() {
 
                 {/* Navigation Buttons */}
                 <div className="flex gap-3 mt-8">
-                    <button onClick="previousStep()" className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-all text-sm">
+                    <button onClick={() => previousStep()} className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-all text-sm">
                         ← Précédent
                     </button>
-                    <button onClick="completeOrder()" className="flex-1 py-2.5 px-4 rounded-xl bg-brand text-white font-semibold hover:bg-brand-dark transition-all text-sm flex items-center justify-center gap-2">
+                    <button onClick={() => completeOrder()} className="flex-1 py-2.5 px-4 rounded-xl bg-brand text-white font-semibold hover:bg-brand-dark transition-all text-sm flex items-center justify-center gap-2">
                         <i className="ph ph-check-circle"></i>
                         Valider la commande
                     </button>

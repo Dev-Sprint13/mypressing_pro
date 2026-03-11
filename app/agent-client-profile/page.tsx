@@ -236,7 +236,7 @@ export default function AgentClientProfilePage() {
 
             <div className="bg-white rounded-2xl shadow-card border border-gray-100/50 p-6">
                 <h2 className="text-lg font-bold text-gray-900 mb-4">Notes et commentaires</h2>
-                <textarea placeholder="Ajouter une note interne..." className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/5" rows="4">Client régulier très satisfait. Préfère le nettoyage à sec. Souvent en urgence.</textarea>
+                <textarea placeholder="Ajouter une note interne..." className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/5" rows={4}>Client régulier très satisfait. Préfère le nettoyage à sec. Souvent en urgence.</textarea>
                 <button className="mt-3 px-4 py-2 bg-brand text-white font-medium rounded-lg hover:bg-brand-dark transition-all text-sm">
                     Enregistrer
                 </button>

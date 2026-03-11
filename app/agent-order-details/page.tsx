@@ -310,7 +310,7 @@ export default function AgentOrderDetailsPage() {
                     </p>
                 </div>
 
-                <textarea placeholder="Ajouter une note..." className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/5" rows="4">Client très satisfait de nos services. Préfère retrait personnel.</textarea>
+                <textarea placeholder="Ajouter une note..." className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/5" rows={4}>Client très satisfait de nos services. Préfère retrait personnel.</textarea>
                 
                 <div className="mt-4 space-y-2">
                     <button className="w-full py-2 px-3 bg-brand-50 text-brand rounded-lg hover:bg-brand hover:text-white font-semibold text-sm transition-all">

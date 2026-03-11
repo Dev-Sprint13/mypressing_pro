@@ -260,7 +260,7 @@ export default function AgentDeliveriesPage() {
                             <button onClick={() => router.push('/delivery-tracking')} className="flex-1 py-2 px-3 bg-brand-50 text-brand rounded-lg hover:bg-brand hover:text-white font-semibold text-sm transition-all flex items-center justify-center gap-2">
                                 <i className="ph ph-map-pin"></i>Suivre en direct
                             </button>
-                            <button onClick="openAssignModal()" className="flex-1 py-2 px-3 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-600 hover:text-white font-semibold text-sm transition-all">
+                            <button onClick={() => openAssignModal()} className="flex-1 py-2 px-3 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-600 hover:text-white font-semibold text-sm transition-all">
                                 Changer le livreur
                             </button>
                             <button className="py-2 px-3 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 text-sm transition-all">
