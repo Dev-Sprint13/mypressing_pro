@@ -41,9 +41,9 @@ export default function LoginPage() {
 
         // Redirect based on role
         if (userRole === 'admin') {
-            router.push('/home');
+            router.push('/');
         } else if (userRole === 'agent') {
-            router.push('/agent_dashboard');
+            router.push('/agent-dashboard');
         }
     };
     return (
