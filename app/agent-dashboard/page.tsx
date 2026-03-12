@@ -185,7 +185,10 @@ export default function AgentDashboardPage() {
                 
                 <div className="space-y-3">
                     {/* Order 1 */}
-                    <div className="p-4 bg-gray-50 border border-gray-100 rounded-xl hover:border-brand hover:bg-brand-50 transition-all cursor-pointer group">
+                    <div
+                      className="p-4 bg-gray-50 border border-gray-100 rounded-xl hover:border-brand hover:bg-brand-50 transition-all cursor-pointer group"
+                      onClick={() => router.push('/agent-order-details')}
+                    >
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="font-semibold text-gray-900 text-sm">ORD-2024-158</p>
@@ -195,12 +198,17 @@ export default function AgentDashboardPage() {
                         </div>
                         <div className="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center text-xs">
                             <span className="text-gray-600 font-medium">15 500 FCFA</span>
-                            <button className="text-brand font-semibold group-hover:underline">Détails →</button>
+                            <button className="text-brand font-semibold group-hover:underline">
+                              Détails →
+                            </button>
                         </div>
                     </div>
 
                     {/* Order 2 */}
-                    <div className="p-4 bg-gray-50 border border-gray-100 rounded-xl hover:border-brand hover:bg-brand-50 transition-all cursor-pointer group">
+                    <div
+                      className="p-4 bg-gray-50 border border-gray-100 rounded-xl hover:border-brand hover:bg-brand-50 transition-all cursor-pointer group"
+                      onClick={() => router.push('/agent-order-details')}
+                    >
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="font-semibold text-gray-900 text-sm">ORD-2024-159</p>
@@ -210,12 +218,17 @@ export default function AgentDashboardPage() {
                         </div>
                         <div className="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center text-xs">
                             <span className="text-gray-600 font-medium">22 000 FCFA</span>
-                            <button className="text-brand font-semibold group-hover:underline">Détails →</button>
+                            <button className="text-brand font-semibold group-hover:underline">
+                              Détails →
+                            </button>
                         </div>
                     </div>
 
                     {/* Order 3 */}
-                    <div className="p-4 bg-gray-50 border border-gray-100 rounded-xl hover:border-brand hover:bg-brand-50 transition-all cursor-pointer group">
+                    <div
+                      className="p-4 bg-gray-50 border border-gray-100 rounded-xl hover:border-brand hover:bg-brand-50 transition-all cursor-pointer group"
+                      onClick={() => router.push('/agent-order-details')}
+                    >
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="font-semibold text-gray-900 text-sm">ORD-2024-160</p>
@@ -225,7 +238,9 @@ export default function AgentDashboardPage() {
                         </div>
                         <div className="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center text-xs">
                             <span className="text-gray-600 font-medium">8 500 FCFA</span>
-                            <button className="text-brand font-semibold group-hover:underline">Détails →</button>
+                            <button className="text-brand font-semibold group-hover:underline">
+                              Détails →
+                            </button>
                         </div>
                     </div>
                 </div>

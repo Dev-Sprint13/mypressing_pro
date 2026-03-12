@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { FormEvent, useRef } from 'react';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -30,7 +31,7 @@ export default function LoginPage() {
         } else if (email === 'agent@pressingpro.com' && password === 'agent123') {
             userRole = 'agent';
         } else {
-            alert('Identifiants invalides. Veuillez utiliser les identifiants de démonstration.');
+            toast.error('Identifiants invalides. Veuillez utiliser les identifiants de démonstration.');
             return;
         }
 

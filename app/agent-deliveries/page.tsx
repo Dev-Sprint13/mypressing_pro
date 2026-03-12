@@ -1,7 +1,8 @@
 'use client';
-
+ 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 export default function AgentDeliveriesPage() {
   const router = useRouter();
@@ -30,7 +31,7 @@ export default function AgentDeliveriesPage() {
   };
 
   const assignDriver = (driverName: string) => {
-    alert(`Assigné à ${driverName}`);
+    toast.success(`Assigné à ${driverName} (simulation).`);
     closeAssignModal();
   };
 

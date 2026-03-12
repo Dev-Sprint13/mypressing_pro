@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useOrdersStore } from '@/lib/orders-store';
 import { buildStorageCode, formatStorageLocation } from '@/lib/utils';
 
@@ -123,7 +124,7 @@ export default function AgentNewOrderPage() {
   const nextStep = () => {
     if (currentStep === 3) {
       if (!orderData.pickupDate || !orderData.pickupTime) {
-        alert('Veuillez sélectionner une date et un créneau horaire');
+        toast.error('Veuillez sélectionner une date et un créneau horaire');
         return;
       }
     }
@@ -175,7 +176,7 @@ export default function AgentNewOrderPage() {
       '[Mock notification]',
       `SMS/Email envoyé à ${created.customerPhone}: votre commande ${created.id} a été payée. Emplacement: ${storagePosition}`,
     );
-    alert('Paiement confirmé. Facture générée et notification client envoyée (simulation).');
+    toast.success('Paiement confirmé. Facture générée et notification client envoyée.');
 
     router.push('/agent-order-ticket');
   };

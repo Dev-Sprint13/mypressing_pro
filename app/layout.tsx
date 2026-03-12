@@ -2,6 +2,7 @@
 
 import "./globals.css";
 import { AppGenProvider } from "@/components/appgen-provider";
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -19,7 +20,10 @@ export default function RootLayout({
         <script src="https://unpkg.com/@phosphor-icons/web"></script>
       </head>
       <body className="antialiased">
-        <AppGenProvider>{children}</AppGenProvider>
+        <AppGenProvider>
+          {children}
+          <Toaster richColors position="top-right" />
+        </AppGenProvider>
       </body>
     </html>
   );
