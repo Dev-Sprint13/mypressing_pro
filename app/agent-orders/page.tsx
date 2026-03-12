@@ -1,9 +1,16 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useOrdersStore } from '@/lib/orders-store';
+import { formatStorageLocation } from '@/lib/utils';
 
 export default function AgentOrdersPage() {
   const router = useRouter();
+  const orders = useOrdersStore((state) => state.orders);
+  const searchOrders = useOrdersStore((state) => state.searchOrders);
+  const [searchQuery, setSearchQuery] = useState('');
+  const visibleOrders = searchQuery ? searchOrders(searchQuery) : orders;
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
@@ -49,6 +56,11 @@ export default function AgentOrdersPage() {
                 <span>Clients</span>
             </button>
             
+            <button onClick={() => router.push('/agent-storage')} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 font-medium transition-all duration-200 text-sm">
+                <i className="ph ph-archive-box text-lg"></i>
+                <span>Rangement</span>
+            </button>
+            
             <button onClick={() => router.push('/agent-cash')} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 font-medium transition-all duration-200 text-sm">
                 <i className="ph ph-cash text-lg"></i>
                 <span>Caisse</span>
@@ -77,7 +89,13 @@ export default function AgentOrdersPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Rechercher</label>
-                    <input type="text" placeholder="Nom client ou numéro..." className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-brand focus:ring-4 focus:ring-brand/5" />
+                    <input
+                      type="text"
+                      placeholder="Nom client ou numéro..."
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-brand focus:ring-4 focus:ring-brand/5"
+                    />
                 </div>
                 
                 <div>
@@ -107,161 +125,75 @@ export default function AgentOrdersPage() {
 
         {/* Orders List */}
         <div className="space-y-4">
-            {/* Order Card 1 */}
-            <div className="bg-white rounded-2xl shadow-card border border-gray-100/50 p-6 hover:shadow-glass hover:border-brand transition-all">
+          {visibleOrders.map((order) => {
+            let statusLabel = 'Reçue';
+            let statusClasses =
+              'px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-[10px] font-bold uppercase';
+
+            if (order.status === 'en_cours') {
+              statusLabel = 'En cours';
+              statusClasses =
+                'px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold uppercase';
+            } else if (order.status === 'prete') {
+              statusLabel = 'Prête';
+              statusClasses =
+                'px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase';
+            } else if (order.status === 'livree') {
+              statusLabel = 'Livrée';
+              statusClasses =
+                'px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-[10px] font-bold uppercase';
+            }
+
+            return (
+              <div
+                key={order.id}
+                className="bg-white rounded-2xl shadow-card border border-gray-100/50 p-6 hover:shadow-glass hover:border-brand transition-all"
+              >
                 <div className="flex items-start justify-between mb-4">
-                    <div>
-                        <p className="text-xs font-semibold text-gray-600 uppercase">ORD-2024-160</p>
-                        <h3 className="text-lg font-bold text-gray-900 mt-1">Marie Rousseau</h3>
-                    </div>
-                    <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase">Prête</span>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-600 uppercase">{order.id}</p>
+                    <h3 className="text-lg font-bold text-gray-900 mt-1">{order.customerName}</h3>
+                  </div>
+                  <span className={statusClasses}>{statusLabel}</span>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 pb-4 border-b border-gray-100">
-                    <div>
-                        <p className="text-xs text-gray-500">Service</p>
-                        <p className="font-semibold text-gray-900 mt-0.5">Nettoyage à sec</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-gray-500">Articles</p>
-                        <p className="font-semibold text-gray-900 mt-0.5">Costume, Chemise</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-gray-500">Montant</p>
-                        <p className="font-semibold text-gray-900 mt-0.5">15,500 FCFA</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-gray-500">Date de retrait</p>
-                        <p className="font-semibold text-gray-900 mt-0.5">Aujourd'hui • 14h</p>
-                    </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Service</p>
+                    <p className="font-semibold text-gray-900 mt-0.5">{order.service}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Articles</p>
+                    <p className="font-semibold text-gray-900 mt-0.5">{order.itemsSummary}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Montant</p>
+                    <p className="font-semibold text-gray-900 mt-0.5">
+                      {order.amount.toLocaleString()} {order.currency ?? 'FCFA'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Emplacement</p>
+                    <p className="font-semibold text-gray-900 mt-0.5">
+                      {formatStorageLocation(order)}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex gap-2">
-                    <button onClick={() => router.push('/agent-order-details')} className="flex-1 py-2 px-3 bg-brand-50 text-brand rounded-lg hover:bg-brand hover:text-white font-semibold text-sm transition-all">
-                        Voir détails
-                    </button>
-                    <button className="flex-1 py-2 px-3 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-600 hover:text-white font-semibold text-sm transition-all">
-                        Marquer comme livrée
-                    </button>
+                  <button
+                    onClick={() => router.push('/agent-order-details')}
+                    className="flex-1 py-2 px-3 bg-brand-50 text-brand rounded-lg hover:bg-brand hover:text-white font-semibold text-sm transition-all"
+                  >
+                    Voir détails
+                  </button>
+                  <button className="flex-1 py-2 px-3 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-600 hover:text-white font-semibold text-sm transition-all">
+                    Mettre à jour
+                  </button>
                 </div>
-            </div>
-
-            {/* Order Card 2 */}
-            <div className="bg-white rounded-2xl shadow-card border border-gray-100/50 p-6 hover:shadow-glass hover:border-brand transition-all">
-                <div className="flex items-start justify-between mb-4">
-                    <div>
-                        <p className="text-xs font-semibold text-gray-600 uppercase">ORD-2024-159</p>
-                        <h3 className="text-lg font-bold text-gray-900 mt-1">Jean Dupont</h3>
-                    </div>
-                    <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold uppercase">En cours</span>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 pb-4 border-b border-gray-100">
-                    <div>
-                        <p className="text-xs text-gray-500">Service</p>
-                        <p className="font-semibold text-gray-900 mt-0.5">Lavage & Repassage</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-gray-500">Articles</p>
-                        <p className="font-semibold text-gray-900 mt-0.5">5 Chemises</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-gray-500">Montant</p>
-                        <p className="font-semibold text-gray-900 mt-0.5">22,000 FCFA</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-gray-500">Date de retrait</p>
-                        <p className="font-semibold text-gray-900 mt-0.5">Demain • 10h</p>
-                    </div>
-                </div>
-
-                <div className="flex gap-2">
-                    <button className="flex-1 py-2 px-3 bg-brand-50 text-brand rounded-lg hover:bg-brand hover:text-white font-semibold text-sm transition-all">
-                        Voir détails
-                    </button>
-                    <button className="flex-1 py-2 px-3 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-600 hover:text-white font-semibold text-sm transition-all">
-                        Marquer comme prête
-                    </button>
-                </div>
-            </div>
-
-            {/* Order Card 3 */}
-            <div className="bg-white rounded-2xl shadow-card border border-gray-100/50 p-6 hover:shadow-glass hover:border-brand transition-all">
-                <div className="flex items-start justify-between mb-4">
-                    <div>
-                        <p className="text-xs font-semibold text-gray-600 uppercase">ORD-2024-158</p>
-                        <h3 className="text-lg font-bold text-gray-900 mt-1">Sophie Martin</h3>
-                    </div>
-                    <span className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-[10px] font-bold uppercase">Reçue</span>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 pb-4 border-b border-gray-100">
-                    <div>
-                        <p className="text-xs text-gray-500">Service</p>
-                        <p className="font-semibold text-gray-900 mt-0.5">Lavage Standard</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-gray-500">Articles</p>
-                        <p className="font-semibold text-gray-900 mt-0.5">10kg de vêtements</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-gray-500">Montant</p>
-                        <p className="font-semibold text-gray-900 mt-0.5">8,500 FCFA</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-gray-500">Date de retrait</p>
-                        <p className="font-semibold text-gray-900 mt-0.5">Samedi • 15h</p>
-                    </div>
-                </div>
-
-                <div className="flex gap-2">
-                    <button className="flex-1 py-2 px-3 bg-brand-50 text-brand rounded-lg hover:bg-brand hover:text-white font-semibold text-sm transition-all">
-                        Voir détails
-                    </button>
-                    <button className="flex-1 py-2 px-3 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold text-sm transition-all">
-                        Contacter le client
-                    </button>
-                </div>
-            </div>
-
-            {/* Order Card 4 */}
-            <div className="bg-white rounded-2xl shadow-card border border-gray-100/50 p-6 hover:shadow-glass hover:border-brand transition-all">
-                <div className="flex items-start justify-between mb-4">
-                    <div>
-                        <p className="text-xs font-semibold text-gray-600 uppercase">ORD-2024-157</p>
-                        <h3 className="text-lg font-bold text-gray-900 mt-1">Hôtel de Paris</h3>
-                    </div>
-                    <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-[10px] font-bold uppercase">Livrée</span>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 pb-4 border-b border-gray-100">
-                    <div>
-                        <p className="text-xs text-gray-500">Service</p>
-                        <p className="font-semibold text-gray-900 mt-0.5">Lavage Industriel</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-gray-500">Articles</p>
-                        <p className="font-semibold text-gray-900 mt-0.5">50kg de draps</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-gray-500">Montant</p>
-                        <p className="font-semibold text-gray-900 mt-0.5">45,000 FCFA</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-gray-500">Date de retrait</p>
-                        <p className="font-semibold text-gray-900 mt-0.5">Hier</p>
-                    </div>
-                </div>
-
-                <div className="flex gap-2">
-                    <button className="flex-1 py-2 px-3 bg-brand-50 text-brand rounded-lg hover:bg-brand hover:text-white font-semibold text-sm transition-all">
-                        Voir détails
-                    </button>
-                    <button className="flex-1 py-2 px-3 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold text-sm transition-all">
-                        Générer facture
-                    </button>
-                </div>
-            </div>
+              </div>
+            );
+          })}
         </div>
 
     </main>

@@ -2,6 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useOrdersStore } from '@/lib/orders-store';
+import { buildStorageCode, formatStorageLocation } from '@/lib/utils';
 
 interface OrderItem {
   name: string;
@@ -19,10 +21,15 @@ interface OrderData {
   pickupDate: string;
   pickupTime: string;
   paymentMethod: string;
+  storageZone: string;
+  storageRack: string;
+  storagePosition: string;
 }
 
 export default function AgentNewOrderPage() {
   const router = useRouter();
+  const orders = useOrdersStore((state) => state.orders);
+  const addOrder = useOrdersStore((state) => state.addOrder);
   
   const [currentStep, setCurrentStep] = useState(1);
   const [orderData, setOrderData] = useState<OrderData>({
@@ -30,7 +37,10 @@ export default function AgentNewOrderPage() {
     items: [],
     pickupDate: '',
     pickupTime: '',
-    paymentMethod: 'cash'
+    paymentMethod: 'cash',
+    storageZone: 'Salle principale',
+    storageRack: 'A',
+    storagePosition: '',
   });
   const [isExistingCustomer, setIsExistingCustomer] = useState(true);
   const [selectedCustomerVisible, setSelectedCustomerVisible] = useState(false);
@@ -88,23 +98,34 @@ export default function AgentNewOrderPage() {
     return { subtotal, tax, total };
   };
 
+  const suggestNextStoragePosition = (zone: string, rack: string): string => {
+    const occupied = new Set(
+      orders
+        .filter(
+          (order) =>
+            order.storageZone === zone &&
+            order.storageRack === rack &&
+            order.storagePosition,
+        )
+        .map((order) => order.storagePosition as string),
+    );
+
+    for (let index = 1; index <= 20; index += 1) {
+      const candidate = index.toString().padStart(2, '0');
+      if (!occupied.has(candidate)) {
+        return candidate;
+      }
+    }
+
+    return '';
+  };
+
   const nextStep = () => {
     if (currentStep === 3) {
-      const dateInput = document.getElementById('pickup-date') as HTMLInputElement;
-      const timeInput = document.getElementById('pickup-time') as HTMLSelectElement;
-      const date = dateInput?.value || '';
-      const time = timeInput?.value || '';
-      
-      if (!date || !time) {
+      if (!orderData.pickupDate || !orderData.pickupTime) {
         alert('Veuillez sélectionner une date et un créneau horaire');
         return;
       }
-      
-      setOrderData(prev => ({
-        ...prev,
-        pickupDate: date,
-        pickupTime: time
-      }));
     }
     
     if (currentStep < 5) {
@@ -121,6 +142,41 @@ export default function AgentNewOrderPage() {
   };
 
   const completeOrder = () => {
+    const pricing = updatePricing();
+
+    const storagePosition =
+      orderData.storagePosition ||
+      suggestNextStoragePosition(orderData.storageZone, orderData.storageRack);
+
+    const created = addOrder({
+      customerName: orderData.customer.name,
+      customerPhone: orderData.customer.phone,
+      service: orderData.items[0]?.name || 'Service pressing',
+      itemsSummary:
+        orderData.items.length > 0
+          ? orderData.items.map((item) => item.name).join(', ')
+          : 'Aucun article',
+      amount: pricing.total,
+      currency: 'FCFA',
+      pickupDate: orderData.pickupDate,
+      pickupTime: orderData.pickupTime,
+      status: 'recue',
+      storageZone: orderData.storageZone,
+      storageRack: orderData.storageRack,
+      storagePosition,
+    });
+
+    // Mock: generate invoice and notify customer
+    console.log(
+      '[Mock facture]',
+      `Facture générée pour ${created.id}, client ${created.customerName}, montant ${created.amount} ${created.currency ?? ''}`,
+    );
+    console.log(
+      '[Mock notification]',
+      `SMS/Email envoyé à ${created.customerPhone}: votre commande ${created.id} a été payée. Emplacement: ${storagePosition}`,
+    );
+    alert('Paiement confirmé. Facture générée et notification client envoyée (simulation).');
+
     router.push('/agent-order-ticket');
   };
 
@@ -176,6 +232,11 @@ export default function AgentNewOrderPage() {
             <button onClick={() => router.push('/agent-clients')} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 font-medium transition-all duration-200 text-sm">
                 <i className="ph ph-users text-lg"></i>
                 <span>Clients</span>
+            </button>
+            
+            <button onClick={() => router.push('/agent-storage')} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 font-medium transition-all duration-200 text-sm">
+                <i className="ph ph-archive-box text-lg"></i>
+                <span>Rangement</span>
             </button>
             
             <button onClick={() => router.push('/agent-cash')} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 font-medium transition-all duration-200 text-sm">
@@ -428,13 +489,33 @@ export default function AgentNewOrderPage() {
                 <div className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-3">Date de retrait prévue</label>
-                        <input type="date" id="pickup-date" 
-                               className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-brand focus:bg-white rounded-xl text-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-brand/5" />
+                        <input
+                          type="date"
+                          id="pickup-date"
+                          value={orderData.pickupDate}
+                          onChange={(event) =>
+                            setOrderData((previous) => ({
+                              ...previous,
+                              pickupDate: event.target.value,
+                            }))
+                          }
+                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-brand focus:bg-white rounded-xl text-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-brand/5"
+                        />
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-3">Créneau horaire</label>
-                        <select id="pickup-time" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-brand focus:bg-white rounded-xl text-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-brand/5">
+                        <select
+                          id="pickup-time"
+                          value={orderData.pickupTime}
+                          onChange={(event) =>
+                            setOrderData((previous) => ({
+                              ...previous,
+                              pickupTime: event.target.value,
+                            }))
+                          }
+                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-brand focus:bg-white rounded-xl text-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-brand/5"
+                        >
                             <option value="">Sélectionner un créneau</option>
                             <option value="09:00-11:00">09:00 - 11:00</option>
                             <option value="11:00-13:00">11:00 - 13:00</option>
@@ -501,16 +582,119 @@ export default function AgentNewOrderPage() {
                     <div className="p-6 bg-gradient-to-br from-brand-50 to-white rounded-2xl border border-brand-100 space-y-3">
                         <div className="flex justify-between">
                             <span className="text-gray-600">Sous-total</span>
-                            <span id="subtotal" className="font-semibold text-gray-900">0 F</span>
+                            <span id="subtotal" className="font-semibold text-gray-900">
+                              {pricing.subtotal.toLocaleString()} F
+                            </span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-gray-600">Taxe (18%)</span>
-                            <span id="tax" className="font-semibold text-gray-900">0 F</span>
+                            <span id="tax" className="font-semibold text-gray-900">
+                              {pricing.tax.toLocaleString()} F
+                            </span>
                         </div>
                         <div className="border-t border-brand-100 pt-3 flex justify-between">
                             <span className="text-lg font-bold text-gray-900">Total</span>
-                            <span id="total" className="text-2xl font-bold text-brand">0 F</span>
+                            <span id="total" className="text-2xl font-bold text-brand">
+                              {pricing.total.toLocaleString()} F
+                            </span>
                         </div>
+                    </div>
+
+                    {/* Storage location */}
+                    <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 space-y-4 mt-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-semibold text-gray-600 uppercase">Emplacement de rangement</p>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  Utilisé pour retrouver rapidement les vêtements dans la zone de rangement.
+                                </p>
+                            </div>
+                            <div className="inline-flex items-center px-3 py-1 rounded-full bg-white border border-dashed border-gray-300 text-xs text-gray-600">
+                                Code :{" "}
+                                <span className="ml-1 font-semibold text-gray-900">
+                                  {buildStorageCode(orderData) ?? 'Non défini'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1.5">Zone</label>
+                                <input
+                                  type="text"
+                                  value={orderData.storageZone}
+                                  onChange={(event) =>
+                                    setOrderData((previous) => ({
+                                      ...previous,
+                                      storageZone: event.target.value,
+                                    }))
+                                  }
+                                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-brand focus:ring-4 focus:ring-brand/5"
+                                  placeholder="Ex : Salle principale"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1.5">Rack</label>
+                                <select
+                                  value={orderData.storageRack}
+                                  onChange={(event) =>
+                                    setOrderData((previous) => ({
+                                      ...previous,
+                                      storageRack: event.target.value,
+                                    }))
+                                  }
+                                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-brand focus:ring-4 focus:ring-brand/5"
+                                >
+                                    {['A', 'B', 'C', 'D'].map((rack) => (
+                                      <option key={rack} value={rack}>
+                                        {rack}
+                                      </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1.5">Position</label>
+                                <div className="flex gap-2">
+                                    <input
+                                      type="number"
+                                      min={1}
+                                      max={99}
+                                      value={orderData.storagePosition}
+                                      onChange={(event) =>
+                                        setOrderData((previous) => ({
+                                          ...previous,
+                                          storagePosition: event.target.value,
+                                        }))
+                                      }
+                                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-brand focus:ring-4 focus:ring-brand/5"
+                                      placeholder="01"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const suggested = suggestNextStoragePosition(
+                                          orderData.storageZone,
+                                          orderData.storageRack,
+                                        );
+                                        setOrderData((previous) => ({
+                                          ...previous,
+                                          storagePosition: suggested || previous.storagePosition,
+                                        }));
+                                      }}
+                                      className="px-3 py-2 rounded-xl border border-dashed border-gray-300 text-xs text-gray-600 hover:border-brand hover:text-brand transition-colors"
+                                    >
+                                      Suggérer
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p className="text-xs text-gray-500">
+                          Emplacement formaté :{" "}
+                          <span className="font-semibold text-gray-900">
+                            {formatStorageLocation(orderData)}
+                          </span>
+                        </p>
                     </div>
                 </div>
 
@@ -526,7 +710,7 @@ export default function AgentNewOrderPage() {
             </div>
 
             {/* STEP 5: Payment */}
-            <div id="step5" className="step-hidden">
+            <div id="step5" className={currentStep === 5 ? 'block' : 'hidden'}>
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Mode de paiement</h2>
                 
                 <div className="space-y-4">
@@ -556,11 +740,16 @@ export default function AgentNewOrderPage() {
                 </div>
 
                 {/* Payment Summary */}
-                <div className="mt-8 p-6 bg-gradient-to-br from-brand-50 to-white rounded-2xl border border-brand-100">
+                <div className="mt-8 p-6 bg-gradient-to-br from-brand-50 to-white rounded-2xl border border-brand-100 space-y-2">
                     <div className="flex justify-between mb-2">
                         <span className="text-gray-600">Montant total</span>
-                        <span id="final-total" className="text-2xl font-bold text-brand">0 F</span>
+                        <span id="final-total" className="text-2xl font-bold text-brand">
+                          {pricing.total.toLocaleString()} F
+                        </span>
                     </div>
+                    <p className="text-xs text-gray-600">
+                      La facture sera générée automatiquement et un reçu sera envoyé au client (simulation).
+                    </p>
                 </div>
 
                 {/* Navigation Buttons */}

@@ -74,6 +74,11 @@ export default function AgentDeliveriesPage() {
                 <span>Livraisons</span>
             </button>
             
+            <button onClick={() => router.push('/agent-storage')} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 font-medium transition-all duration-200 text-sm">
+                <i className="ph ph-archive-box text-lg"></i>
+                <span>Rangement</span>
+            </button>
+            
             <button onClick={() => router.push('/agent-cash')} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 font-medium transition-all duration-200 text-sm">
                 <i className="ph ph-cash text-lg"></i>
                 <span>Caisse</span>

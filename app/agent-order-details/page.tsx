@@ -1,9 +1,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useOrdersStore } from '@/lib/orders-store';
+import { formatStorageLocation } from '@/lib/utils';
 
 export default function AgentOrderDetailsPage() {
   const router = useRouter();
+  const firstOrder = useOrdersStore((state) => state.orders[0]);
 
     return (
       <>
@@ -38,6 +41,11 @@ export default function AgentOrderDetailsPage() {
             <button onClick={() => router.push('/agent-clients')} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 font-medium transition-all duration-200 text-sm">
                 <i className="ph ph-users text-lg"></i>
                 <span>Clients</span>
+            </button>
+            
+            <button onClick={() => router.push('/agent-storage')} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 font-medium transition-all duration-200 text-sm">
+                <i className="ph ph-archive-box text-lg"></i>
+                <span>Rangement</span>
             </button>
             
             <button onClick={() => router.push('/agent-cash')} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 font-medium transition-all duration-200 text-sm">
@@ -316,6 +324,18 @@ export default function AgentOrderDetailsPage() {
                     <button className="w-full py-2 px-3 bg-brand-50 text-brand rounded-lg hover:bg-brand hover:text-white font-semibold text-sm transition-all">
                         Enregistrer la note
                     </button>
+                </div>
+            </div>
+
+            {/* Storage location summary */}
+            <div className="bg-white rounded-2xl shadow-card border border-gray-100/50 p-6">
+                <h2 className="text-lg font-bold text-gray-900 mb-4">Emplacement de rangement</h2>
+                <p className="text-sm text-gray-600 mb-3">
+                    Utilisez ce code pour retrouver rapidement les vêtements dans la zone de rangement.
+                </p>
+                <div className="inline-flex items-center px-4 py-2 rounded-full bg-brand-50 text-brand border border-brand-100 text-sm font-semibold">
+                    <i className="ph ph-map-pin mr-2" />
+                    {firstOrder ? formatStorageLocation(firstOrder) : 'Non défini'}
                 </div>
             </div>
         </div>

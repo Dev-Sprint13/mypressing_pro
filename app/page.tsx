@@ -1,9 +1,15 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useOrdersStore } from '@/lib/orders-store';
+import { buildStorageCode, formatStorageLocation } from '@/lib/utils';
 
 export default function HomePage() {
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchOrders = useOrdersStore((state) => state.searchOrders);
+  const searchResults = searchQuery ? searchOrders(searchQuery).slice(0, 5) : [];
 
     return (
       <>
@@ -46,7 +52,13 @@ export default function HomePage() {
                 {/* Search */}
                 <div className="hidden lg:flex items-center relative">
                     <i className="ph ph-magnifying-glass absolute left-3 text-gray-400 text-lg"></i>
-                    <input type="text" placeholder="Rechercher (Ctrl+K)" className="pl-10 pr-4 py-2 bg-gray-100/80 border-transparent focus:bg-white border focus:border-brand/30 rounded-xl text-sm w-64 outline-none transition-all duration-200 placeholder:text-gray-400 focus:ring-4 focus:ring-brand/5" />
+                    <input
+                      type="text"
+                      placeholder="Rechercher (Ctrl+K)"
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      className="pl-10 pr-4 py-2 bg-gray-100/80 border-transparent focus:bg-white border focus:border-brand/30 rounded-xl text-sm w-64 outline-none transition-all duration-200 placeholder:text-gray-400 focus:ring-4 focus:ring-brand/5"
+                    />
                 </div>
                 
                 <button className="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-500 transition-colors relative">
@@ -93,6 +105,51 @@ export default function HomePage() {
                 </button>
             </div>
         </div>
+
+        {/* Global search results */}
+        {searchQuery && (
+          <div className="mb-8 opacity-0 animate-slide-up">
+            <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-card border border-gray-100/50">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold text-gray-900">
+                  Résultats pour « {searchQuery} »
+                </h2>
+                <span className="text-xs text-gray-500">
+                  {searchResults.length} commande{searchResults.length > 1 ? 's' : ''}
+                </span>
+              </div>
+              {searchResults.length === 0 ? (
+                <p className="text-xs text-gray-500">Aucune commande trouvée.</p>
+              ) : (
+                <ul className="divide-y divide-gray-100">
+                  {searchResults.map((order) => (
+                    <li
+                      key={order.id}
+                      className="py-2.5 flex items-center justify-between gap-4"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {order.id} · {order.customerName}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {order.customerPhone} • {order.service}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-0.5">
+                        <span className="text-xs font-semibold text-gray-900">
+                          {buildStorageCode(order) ?? 'Emplacement non défini'}
+                        </span>
+                        <span className="text-[11px] text-gray-500">
+                          {formatStorageLocation(order)}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* KPI Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 opacity-0 animate-slide-up delay-100">

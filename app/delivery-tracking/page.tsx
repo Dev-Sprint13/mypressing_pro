@@ -1,9 +1,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useOrdersStore } from '@/lib/orders-store';
+import { formatStorageLocation } from '@/lib/utils';
 
 export default function DeliveryTrackingPage() {
   const router = useRouter();
+  const firstOrder = useOrdersStore((state) => state.orders[0]);
 
     return (
       <>
@@ -33,6 +36,11 @@ export default function DeliveryTrackingPage() {
             <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-brand-50 text-brand font-medium transition-all duration-200 text-sm">
                 <i className="ph ph-truck text-lg"></i>
                 <span>Livraisons</span>
+            </button>
+            
+            <button onClick={() => router.push('/agent-storage')} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 font-medium transition-all duration-200 text-sm">
+                <i className="ph ph-archive-box text-lg"></i>
+                <span>Rangement</span>
             </button>
             
             <button onClick={() => router.push('/agent-cash')} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 font-medium transition-all duration-200 text-sm">
@@ -307,10 +315,16 @@ export default function DeliveryTrackingPage() {
                         </div>
                     </div>
 
-                    <div className="border-t border-gray-100 pt-3">
+                    <div className="border-t border-gray-100 pt-3 space-y-2">
                         <div className="flex justify-between font-bold">
                             <span>Total</span>
                             <span className="text-brand">15,500 FCFA</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-600">
+                            <span>Emplacement de rangement</span>
+                            <span className="font-semibold text-gray-900">
+                              {firstOrder ? formatStorageLocation(firstOrder) : 'Non défini'}
+                            </span>
                         </div>
                     </div>
 

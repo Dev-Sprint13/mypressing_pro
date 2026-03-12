@@ -1,9 +1,16 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useOrdersStore } from '@/lib/orders-store';
+import { formatStorageLocation } from '@/lib/utils';
 
 export default function OrdersManagementPage() {
   const router = useRouter();
+  const orders = useOrdersStore((state) => state.orders);
+  const searchOrders = useOrdersStore((state) => state.searchOrders);
+  const [searchQuery, setSearchQuery] = useState('');
+  const visibleOrders = searchQuery ? searchOrders(searchQuery) : orders;
 
     return (
       <>
@@ -86,7 +93,13 @@ export default function OrdersManagementPage() {
             {/* Search */}
             <div className="flex-1 relative">
                 <i className="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
-                <input type="text" placeholder="Rechercher par N° commande, client ou ID..." className="w-full pl-11 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 focus:bg-white focus:border-brand/50 rounded-xl text-sm outline-none transition-all duration-200 placeholder:text-gray-400 focus:ring-4 focus:ring-brand/5" />
+                <input
+                  type="text"
+                  placeholder="Rechercher par N° commande, client ou ID..."
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  className="w-full pl-11 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 focus:bg-white focus:border-brand/50 rounded-xl text-sm outline-none transition-all duration-200 placeholder:text-gray-400 focus:ring-4 focus:ring-brand/5"
+                />
             </div>
             
             {/* Filters */}
@@ -142,242 +155,104 @@ export default function OrdersManagementPage() {
 
             {/* Order List */}
             <div className="divide-y divide-gray-100">
+              {visibleOrders.map((order) => {
+                let statusStyles =
+                  'px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 border border-gray-200 text-[11px] font-bold tracking-wide uppercase inline-flex items-center gap-1.5 shadow-sm';
+                let statusDot = 'bg-gray-400';
 
-                {/* Order Card/Row 1 */}
-                <div className="p-4 sm:px-6 sm:py-5 hover:bg-gray-50/50 transition-colors flex flex-col sm:flex-row items-start sm:items-center gap-4 group relative">
+                if (order.status === 'en_cours') {
+                  statusStyles =
+                    'px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100/50 text-[11px] font-bold tracking-wide uppercase inline-flex items-center gap-1.5 shadow-sm';
+                  statusDot = 'bg-blue-500';
+                } else if (order.status === 'recue') {
+                  statusStyles =
+                    'px-2.5 py-1 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-100/50 text-[11px] font-bold tracking-wide uppercase inline-flex items-center gap-1.5 shadow-sm';
+                  statusDot = 'bg-yellow-500';
+                } else if (order.status === 'prete') {
+                  statusStyles =
+                    'px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100/50 text-[11px] font-bold tracking-wide uppercase inline-flex items-center gap-1.5 shadow-sm';
+                  statusDot = 'bg-emerald-500';
+                }
+
+                return (
+                  <div
+                    key={order.id}
+                    className="p-4 sm:px-6 sm:py-5 hover:bg-gray-50/50 transition-colors flex flex-col sm:flex-row items-start sm:items-center gap-4 group relative"
+                  >
                     {/* ID & Date */}
                     <div className="w-full sm:w-32 flex justify-between sm:block shrink-0">
-                        <p className="font-bold text-gray-900 text-sm">ORD-001</p>
-                        <p className="text-xs text-gray-500 mt-0.5">Aujourd'hui, 09:30</p>
+                      <p className="font-bold text-gray-900 text-sm">{order.id}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {order.pickupDate ? `${order.pickupDate}, ${order.pickupTime ?? ''}` : '—'}
+                      </p>
                     </div>
 
                     {/* Customer */}
                     <div className="w-full sm:w-64 flex items-center gap-3 shrink-0">
-                        <div className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs shadow-sm ring-1 ring-white">MD</div>
-                        <div>
-                            <p className="font-medium text-gray-900 text-sm">Marie Dubois</p>
-                            <p className="text-xs text-gray-500">+33 6 45 32 11 22</p>
-                        </div>
+                      <div className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs shadow-sm ring-1 ring-white">
+                        {order.customerName
+                          .split(' ')
+                          .map((part) => part.charAt(0))
+                          .join('')
+                          .slice(0, 2)
+                          .toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 text-sm">{order.customerName}</p>
+                        <p className="text-xs text-gray-500">{order.customerPhone}</p>
+                      </div>
                     </div>
 
                     {/* Service & Items */}
                     <div className="w-full sm:flex-1">
-                        <p className="font-medium text-gray-900 text-sm">Nettoyage à sec</p>
-                        <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1.5">
-                            <i className="ph ph-t-shirt text-gray-400"></i> 2 articles (Costume, Chemise)
-                        </p>
+                      <p className="font-medium text-gray-900 text-sm">{order.service}</p>
+                      <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1.5">
+                        <i className="ph ph-t-shirt text-gray-400" />
+                        {order.itemsSummary}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1.5">
+                        <i className="ph ph-map-pin text-gray-400" />
+                        <span>Emplacement : {formatStorageLocation(order)}</span>
+                      </p>
                     </div>
 
                     {/* Price */}
                     <div className="w-full sm:w-32 flex justify-between sm:block text-right shrink-0 sm:pr-6">
-                        <span className="sm:hidden text-xs text-gray-500 font-medium">Montant</span>
-                        <p className="font-bold text-gray-900 text-sm">12 000 FCFA</p>
+                      <span className="sm:hidden text-xs text-gray-500 font-medium">Montant</span>
+                      <p className="font-bold text-gray-900 text-sm">
+                        {order.amount.toLocaleString()} {order.currency ?? 'FCFA'}
+                      </p>
                     </div>
 
                     {/* Status */}
                     <div className="w-full sm:w-32 flex shrink-0">
-                        <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100/50 text-[11px] font-bold tracking-wide uppercase inline-flex items-center gap-1.5 shadow-sm">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span> En cours
-                        </span>
+                      <span className={statusStyles}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${statusDot}`} />
+                        {order.status === 'recue'
+                          ? 'Reçue'
+                          : order.status === 'en_cours'
+                          ? 'En cours'
+                          : order.status === 'prete'
+                          ? 'Terminée'
+                          : 'Livrée'}
+                      </span>
                     </div>
 
                     {/* Actions */}
                     <div className="w-full sm:w-24 flex items-center gap-1 mt-2 sm:mt-0 justify-end sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-brand hover:bg-brand-50 rounded-lg transition-colors" title="Contacter">
-                            <i className="ph ph-chat-teardrop-text text-[1.1rem]"></i>
-                        </button>
-                        <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Marquer comme prêt">
-                            <i className="ph ph-check-circle text-[1.1rem]"></i>
-                        </button>
-                        <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors" title="Voir détails">
-                            <i className="ph ph-caret-right text-[1.1rem]"></i>
-                        </button>
+                      <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-brand hover:bg-brand-50 rounded-lg transition-colors" title="Contacter">
+                        <i className="ph ph-chat-teardrop-text text-[1.1rem]" />
+                      </button>
+                      <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Marquer comme prêt">
+                        <i className="ph ph-check-circle text-[1.1rem]" />
+                      </button>
+                      <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors" title="Voir détails">
+                        <i className="ph ph-caret-right text-[1.1rem]" />
+                      </button>
                     </div>
-                </div>
-
-                {/* Order Card/Row 2 */}
-                <div className="p-4 sm:px-6 sm:py-5 hover:bg-gray-50/50 transition-colors flex flex-col sm:flex-row items-start sm:items-center gap-4 group relative">
-                    <div className="w-full sm:w-32 flex justify-between sm:block shrink-0">
-                        <p className="font-bold text-gray-900 text-sm">ORD-002</p>
-                        <p className="text-xs text-gray-500 mt-0.5">Aujourd'hui, 08:15</p>
-                    </div>
-
-                    <div className="w-full sm:w-64 flex items-center gap-3 shrink-0">
-                        <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs shadow-sm ring-1 ring-white">JM</div>
-                        <div>
-                            <p className="font-medium text-gray-900 text-sm">Jean Martin</p>
-                            <p className="text-xs text-gray-500">+33 6 12 34 56 78</p>
-                        </div>
-                    </div>
-
-                    <div className="w-full sm:flex-1">
-                        <p className="font-medium text-gray-900 text-sm">Lavage & Repassage</p>
-                        <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1.5">
-                            <i className="ph ph-stack text-gray-400"></i> 5 articles (Chemises)
-                        </p>
-                    </div>
-
-                    <div className="w-full sm:w-32 flex justify-between sm:block text-right shrink-0 sm:pr-6">
-                        <span className="sm:hidden text-xs text-gray-500 font-medium">Montant</span>
-                        <p className="font-bold text-gray-900 text-sm">8 500 FCFA</p>
-                    </div>
-
-                    <div className="w-full sm:w-32 flex shrink-0">
-                        <span className="px-2.5 py-1 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-100/50 text-[11px] font-bold tracking-wide uppercase inline-flex items-center gap-1.5 shadow-sm">
-                            <span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span> Reçue
-                        </span>
-                    </div>
-
-                    <div className="w-full sm:w-24 flex items-center gap-1 mt-2 sm:mt-0 justify-end sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-brand hover:bg-brand-50 rounded-lg transition-colors">
-                            <i className="ph ph-chat-teardrop-text text-[1.1rem]"></i>
-                        </button>
-                        <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                            <i className="ph ph-play-circle text-[1.1rem]"></i>
-                        </button>
-                        <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                            <i className="ph ph-caret-right text-[1.1rem]"></i>
-                        </button>
-                    </div>
-                </div>
-
-                {/* Order Card/Row 3 */}
-                <div className="p-4 sm:px-6 sm:py-5 hover:bg-gray-50/50 transition-colors flex flex-col sm:flex-row items-start sm:items-center gap-4 group relative">
-                    <div className="w-full sm:w-32 flex justify-between sm:block shrink-0">
-                        <p className="font-bold text-gray-900 text-sm">ORD-003</p>
-                        <p className="text-xs text-gray-500 mt-0.5">Hier, 17:45</p>
-                    </div>
-
-                    <div className="w-full sm:w-64 flex items-center gap-3 shrink-0">
-                        <div className="w-9 h-9 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xs shadow-sm ring-1 ring-white">SB</div>
-                        <div>
-                            <p className="font-medium text-gray-900 text-sm">Sophie Bernard</p>
-                            <p className="text-xs text-gray-500">+33 6 98 76 54 32</p>
-                        </div>
-                    </div>
-
-                    <div className="w-full sm:flex-1">
-                        <p className="font-medium text-gray-900 text-sm">Express (24h)</p>
-                        <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1.5">
-                            <i className="ph ph-dress text-gray-400"></i> 1 article (Robe soirée)
-                        </p>
-                    </div>
-
-                    <div className="w-full sm:w-32 flex justify-between sm:block text-right shrink-0 sm:pr-6">
-                        <span className="sm:hidden text-xs text-gray-500 font-medium">Montant</span>
-                        <p className="font-bold text-gray-900 text-sm">6 000 FCFA</p>
-                    </div>
-
-                    <div className="w-full sm:w-32 flex shrink-0">
-                        <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100/50 text-[11px] font-bold tracking-wide uppercase inline-flex items-center gap-1.5 shadow-sm">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Terminée
-                        </span>
-                    </div>
-
-                    <div className="w-full sm:w-24 flex items-center gap-1 mt-2 sm:mt-0 justify-end sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-brand hover:bg-brand-50 rounded-lg transition-colors">
-                            <i className="ph ph-chat-teardrop-text text-[1.1rem]"></i>
-                        </button>
-                        <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                            <i className="ph ph-caret-right text-[1.1rem]"></i>
-                        </button>
-                    </div>
-                </div>
-
-                {/* Order Card/Row 4 */}
-                <div className="p-4 sm:px-6 sm:py-5 hover:bg-gray-50/50 transition-colors flex flex-col sm:flex-row items-start sm:items-center gap-4 group relative">
-                    <div className="w-full sm:w-32 flex justify-between sm:block shrink-0">
-                        <p className="font-bold text-gray-900 text-sm">ORD-004</p>
-                        <p className="text-xs text-gray-500 mt-0.5">16 Avr 2024</p>
-                    </div>
-
-                    <div className="w-full sm:w-64 flex items-center gap-3 shrink-0">
-                        <div className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 text-gray-600 flex items-center justify-center shadow-sm">
-                            <i className="ph ph-buildings text-lg"></i>
-                        </div>
-                        <div>
-                            <p className="font-medium text-gray-900 text-sm flex items-center gap-1.5">
-                                Hôtel de Paris
-                                <span className="px-1.5 py-0.5 bg-brand-50 text-brand text-[9px] rounded font-bold uppercase">Pro</span>
-                            </p>
-                            <p className="text-xs text-gray-500">contact@hotelparis.com</p>
-                        </div>
-                    </div>
-
-                    <div className="w-full sm:flex-1">
-                        <p className="font-medium text-gray-900 text-sm">Lavage Industriel</p>
-                        <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1.5">
-                            <i className="ph ph-scales text-gray-400"></i> Linge de lit (50kg)
-                        </p>
-                    </div>
-
-                    <div className="w-full sm:w-32 flex justify-between sm:block text-right shrink-0 sm:pr-6">
-                        <span className="sm:hidden text-xs text-gray-500 font-medium">Montant</span>
-                        <p className="font-bold text-gray-900 text-sm">45 000 FCFA</p>
-                    </div>
-
-                    <div className="w-full sm:w-32 flex shrink-0">
-                        <span className="px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 border border-gray-200 text-[11px] font-bold tracking-wide uppercase inline-flex items-center gap-1.5 shadow-sm">
-                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span> Livrée
-                        </span>
-                    </div>
-
-                    <div className="w-full sm:w-24 flex items-center gap-1 mt-2 sm:mt-0 justify-end sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-brand hover:bg-brand-50 rounded-lg transition-colors" title="Facture">
-                            <i className="ph ph-receipt text-[1.1rem]"></i>
-                        </button>
-                        <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                            <i className="ph ph-caret-right text-[1.1rem]"></i>
-                        </button>
-                    </div>
-                </div>
-
-                {/* Order Card/Row 5 */}
-                <div className="p-4 sm:px-6 sm:py-5 hover:bg-gray-50/50 transition-colors flex flex-col sm:flex-row items-start sm:items-center gap-4 group relative">
-                    <div className="w-full sm:w-32 flex justify-between sm:block shrink-0">
-                        <p className="font-bold text-gray-900 text-sm">ORD-005</p>
-                        <p className="text-xs text-gray-500 mt-0.5">15 Avr 2024</p>
-                    </div>
-
-                    <div className="w-full sm:w-64 flex items-center gap-3 shrink-0">
-                        <div className="w-9 h-9 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-xs shadow-sm ring-1 ring-white">LM</div>
-                        <div>
-                            <p className="font-medium text-gray-900 text-sm">Lucas Moreau</p>
-                            <p className="text-xs text-gray-500">+33 6 11 22 33 44</p>
-                        </div>
-                    </div>
-
-                    <div className="w-full sm:flex-1">
-                        <p className="font-medium text-gray-900 text-sm">Nettoyage à sec</p>
-                        <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1.5">
-                            <i className="ph ph-t-shirt text-gray-400"></i> 3 articles (Manteau, Écharpes)
-                        </p>
-                    </div>
-
-                    <div className="w-full sm:w-32 flex justify-between sm:block text-right shrink-0 sm:pr-6">
-                        <span className="sm:hidden text-xs text-gray-500 font-medium">Montant</span>
-                        <p className="font-bold text-gray-900 text-sm">18 000 FCFA</p>
-                    </div>
-
-                    <div className="w-full sm:w-32 flex shrink-0">
-                        <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100/50 text-[11px] font-bold tracking-wide uppercase inline-flex items-center gap-1.5 shadow-sm">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span> En cours
-                        </span>
-                    </div>
-
-                    <div className="w-full sm:w-24 flex items-center gap-1 mt-2 sm:mt-0 justify-end sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-brand hover:bg-brand-50 rounded-lg transition-colors">
-                            <i className="ph ph-chat-teardrop-text text-[1.1rem]"></i>
-                        </button>
-                        <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors">
-                            <i className="ph ph-check-circle text-[1.1rem]"></i>
-                        </button>
-                        <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                            <i className="ph ph-caret-right text-[1.1rem]"></i>
-                        </button>
-                    </div>
-                </div>
-
+                  </div>
+                );
+              })}
             </div>
 
             {/* Pagination */}
